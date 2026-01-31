@@ -1,0 +1,36 @@
+{
+  "name": "{{NAME}}",
+  "description": "{{DESCRIPTION}}",
+  "version": "1.0.0",
+  "author": "{{AUTHOR}}",
+  "tags": ["{{TAGS}}"],
+  "created": "{{DATE}}",
+  "license": "MIT",
+  "server": {
+    "command": "node",
+    "args": ["dist/index.js"],
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "capabilities": {
+    "resources": {},
+    "tools": [
+      {
+        "name": "example_tool",
+        "description": "An example tool",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "param": {
+              "type": "string",
+              "description": "A parameter"
+            }
+          },
+          "required": ["param"]
+        }
+      }
+    ],
+    "prompts": []
+  }
+}
