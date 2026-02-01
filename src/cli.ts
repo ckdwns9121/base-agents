@@ -9,6 +9,7 @@ import { syncCommand } from './commands/sync.js';
 import { templateCommand } from './commands/template.js';
 import { listCommand } from './commands/list.js';
 import { configCommand } from './commands/config.js';
+import { copyToProjectCommand } from './commands/copy-to-project.js';
 
 const cli = cac('base-agents');
 
@@ -28,7 +29,12 @@ cli.command('install <tool>', 'Install or update tool configurations from git')
 // Sync command
 cli.command('sync <source> [targets...]', 'Sync configurations between tools')
   .option('-c, --conflict <strategy>', 'Conflict strategy: ask, overwrite, skip (default: ask)')
-  .action(syncCommand);
+  .action((source, ...rest) => {
+    // Last argument is options, rest are targets
+    const options = rest.pop() as any;
+    const targets = rest as string[];
+    syncCommand(source, targets, options);
+  });
 
 // Template command
 cli.command('template <type> <name>', 'Generate a new template')
@@ -56,6 +62,15 @@ cli.command('init', 'Initialize base-agents configuration')
 
     logger.success(`Initialized base-agents in ${root}`);
   });
+
+// Copy to project
+cli.command('copy-to-project', 'Copy SSOT to current project')
+  .option('--skills', 'Copy skills')
+  .option('--rules', 'Copy rules')
+  .option('--agents', 'Copy agents')
+  .option('--mcp', 'Copy MCP servers')
+  .option('-a, --all', 'Copy all categories')
+  .action(copyToProjectCommand);
 
 // Parse arguments
 cli.parse();

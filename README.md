@@ -1,243 +1,269 @@
 # Base Agents
 
-CLI tool for managing AI IDE tool configurations (.claude, .gemini, .cursor, .opencode, .agents) from Git repositories.
+**SSOT(Single Source of Truth)** for AI IDE configurations. 한 곳에서 스킬, 규칙, 에이전트를 관리하고 여러 프로젝트에서 사용하세요.
 
-## Features
+## 핵심 개념
 
-- **Install/Update**: Clone and keep AI tool configurations up to date from Git repositories
-- **Sync**: Share configurations across multiple AI tools
-- **Templates**: Generate new skills, agents, and MCP server templates
-- **Multi-tool Support**: Claude Code, Cursor IDE, Gemini Code Assist, and more
+```
+base-agents/           ← SSOT (한 곳에서만 관리)
+├── skills/            # 공통 스킬
+├── rules/             # 공통 규칙
+├── agents/            # 공통 에이전트
+├── mcp/               # MCP 서버
+└── setup-agents.sh    # 설정 스크립트
 
-## Installation
-
-```bash
-npm install -g base-agents
+내 프로젝트/            ← 사용할 때 복사
+├── .claude/           # Claude 설정
+├── .cursor/           # Cursor 설정
+└── .gemini/           # Gemini 설정
 ```
 
-Or use directly with npx:
+## 빠른 시작
+
+### 1. 스킬/규칙 추가
 
 ```bash
-npx base-agents <command>
+cd base-agents/
+
+# 새 스킬 만들기
+node dist/cli.js template skill my-testing-patterns
+
+# 또는 직접 폴더 만들기
+mkdir -p skills/react-patterns
+# SKILL.md 작성
 ```
 
-## Quick Start
+### 2. 프로젝트에서 사용
+
+#### 방법 A: CLI 명령
 
 ```bash
-# Initialize base-agents
-base-agents init
+cd my-project/
+node /path/to/base-agents/dist/cli.js copy-to-project --all
+```
 
-# Install Claude Code configurations
+#### 방법 B: Bash 스크립트
+
+```bash
+cd my-project/
+/path/to/base-agents/setup-agents.sh
+```
+
+#### 방법 C: 선택적 복사
+
+```bash
+# 스킬만 복사
+node /path/to/base-agents/dist/cli.js copy-to-project --skills
+
+# 규칙만 복사
+/path/to/base-agents/setup-agents.sh --rules
+```
+
+### 3. 결과
+
+프로젝트에 자동으로 생성됨:
+
+```
+my-project/
+├── .claude/
+│   ├── skills/      ← base-agents/skills/ 복사
+│   ├── agents/      ← base-agents/agents/ 복사
+│   └── mcp/         ← base-agents/mcp/ 복사
+└── .cursor/
+    ├── skills/      ← base-agents/skills/ 복사
+    └── rules/       ← base-agents/rules/ 복사
+```
+
+## 구조
+
+### SSOT 폴더 구조
+
+```
+base-agents/
+├── skills/              # 공통 스킬
+│   ├── testing-patterns/
+│   │   └── SKILL.md
+│   └── react-best-practices/
+│       └── SKILL.md
+├── rules/               # 공통 규칙
+│   ├── coding-standards.md
+│   └── .cursorrules
+├── agents/              # 공통 에이전트
+│   ├── code-reviewer/
+│   │   └── AGENT.md
+│   └── test-generator/
+│       └── AGENT.md
+├── mcp/                 # MCP 서버
+│   └── my-server/
+│       └── server.json
+├── templates/           # 템플릿
+├── src/                 # CLI 소스
+└── setup-agents.sh      # 설정 스크립트
+```
+
+## 사용 방법
+
+### CLI로 사용
+
+```bash
+# 모든 카테고리 복사
+base-agents copy-to-project --all
+
+# 또는
+base-agents copy-to-project -a
+
+# 특정 카테고리만 복사
+base-agents copy-to-project --skills
+base-agents copy-to-project --rules
+base-agents copy-to-project --agents
+base-agents copy-to-project --mcp
+
+# 조합
+base-agents copy-to-project --skills --rules
+```
+
+### Bash 스크립트로 사용
+
+```bash
+# 전체 복사
+./setup-agents.sh
+
+# 선택적 복사
+./setup-agents.sh --skills
+./setup-agents.sh --rules --agents
+./setup-agents.sh -a  # 전체
+```
+
+## 템플릿 생성
+
+### 스킬 템플릿
+
+```bash
+cd base-agents/
+node dist/cli.js template skill my-skill --description "내 스킬 설명"
+
+# 결과
+skills/my-skill/
+└── SKILL.md
+```
+
+### 에이전트 템플릿
+
+```bash
+node dist/cli.js template agent my-agent --description "코드 리뷰어"
+
+# 결과
+agents/my-agent/
+└── AGENT.md
+```
+
+### MCP 서버 템플릿
+
+```bash
+node dist/cli.js template mcp my-mcp
+
+# 결과
+mcp/my-mcp/
+└── server.json
+```
+
+## 환경 변수
+
+```bash
+# SSOT 위치 지정 (기본: ~/Desktop/base-agents)
+export BASE_AGENTS_SSOT=/path/to/base-agents
+
+# 사용
+base-agents copy-to-project --all
+```
+
+## Git 저장소에서 설치 (이전 방식)
+
+```bash
+# Cursor 규칙 설치
+base-agents install cursor
+
+# Claude 설정 설치
 base-agents install claude
 
-# Install Cursor rules from a custom repository
+# 커스텀 저장소
 base-agents install cursor https://github.com/user/cursor-rules
-
-# List all installed tools
-base-agents list
-
-# Generate a new skill template
-base-agents template skill my-testing-patterns
-
-# Sync configurations between tools
-base-agents sync claude gemini
 ```
 
-## Commands
-
-### `base-agents init`
-
-Initialize base-agents configuration in `~/.base-agents`.
+## 개발
 
 ```bash
-base-agents init
-```
-
-### `base-agents install <tool> [repo]`
-
-Install or update tool configurations from a Git repository.
-
-```bash
-# Install with default repository
-base-agents install claude
-
-# Install from custom repository
-base-agents install claude https://github.com/user/claude-configs
-
-# Install from specific branch
-base-agents install cursor --branch main
-
-# Force reinstall
-base-agents install claude --force
-```
-
-**Options:**
-- `-r, --repo <url>` - Custom repository URL
-- `-b, --branch <name>` - Branch name (default: main)
-- `-f, --force` - Force reinstall
-
-### `base-agents sync <source> [targets...]`
-
-Sync configurations between tools.
-
-```bash
-# Sync Claude configs to Gemini
-base-agents sync claude gemini
-
-# Sync to multiple targets
-base-agents sync claude gemini cursor
-
-# Overwrite on conflict
-base-agents sync claude gemini --conflict overwrite
-```
-
-**Options:**
-- `-c, --conflict <strategy>` - Conflict strategy: ask, overwrite, skip (default: ask)
-
-### `base-agents template <type> <name>`
-
-Generate a new template.
-
-```bash
-# Generate skill template
-base-agents template skill testing-patterns
-
-# Generate agent template with description
-base-agents template agent code-reviewer --description "Reviews code for best practices"
-
-# Generate MCP server template
-base-agents template mcp my-jira-server
-
-# Generate in custom directory
-base-agents template skill my-skill --output ./custom/path
-```
-
-**Options:**
-- `-d, --description <text>` - Template description
-- `-o, --output <path>` - Output directory
-
-### `base-agents list [tool]`
-
-List installed configurations.
-
-```bash
-# List all tools
-base-agents list
-
-# List specific tool details
-base-agents list claude
-```
-
-### `base-agents config <action> [key] [value]`
-
-Manage configuration.
-
-```bash
-# Get all config
-base-agents config get
-
-# Get specific key
-base-agents config get preferences.defaultBranch
-
-# Set config value
-base-agents config set preferences.defaultBranch main
-
-# List all config
-base-agents config list
-
-# Reset to defaults
-base-agents config reset
-```
-
-## Supported Tools
-
-| Tool | Description | Status |
-|------|-------------|--------|
-| **claude** | Claude Code configurations | ✅ Supported |
-| **cursor** | Cursor IDE rules | ✅ Supported |
-| **gemini** | Gemini Code Assist | ✅ Supported |
-| **opencode** | OpenCode configurations | 🚧 Coming soon |
-| **agents** | Generic agents | ✅ Supported |
-
-## Aliases
-
-Each tool has aliases for convenience:
-
-- `claude`: `.claude`, `claude-code`, `anthropic`
-- `cursor`: `.cursor`, `cursor-ide`
-- `gemini`: `.gemini`, `gemini-code`, `google`
-- `opencode`: `.opencode`, `open-code`
-- `agents`: `.agents`, `agent`
-
-## Directory Structure
-
-```
-~/.base-agents/           # Root directory
-├── claude/               # Claude configurations
-├── cursor/               # Cursor configurations
-├── gemini/               # Gemini configurations
-├── agents/               # Generic agents
-└── .config/              # Internal config
-    ├── registry.json     # Tool registry
-    ├── state.json        # Installation state
-    └── config.json       # User configuration
-```
-
-## Development
-
-```bash
-# Install dependencies
+# 의존성 설치
 npm install
 
-# Build TypeScript
+# 빌드
 npm run build
 
-# Run in development mode
+# 개발 모드
 npm run dev -- <command>
 
-# Watch mode
-npm run watch
-
-# Run tests
-npm test
-
-# Lint code
-npm run lint
+# 전역 설치 (선택)
+npm link
 ```
 
-## Configuration
+## 예시 워크플로우
 
-Base-agents stores configuration in `~/.base-agents/.config/config.json`:
+### 1. 새 스킬 추가
 
-```json
-{
-  "preferences": {
-    "defaultBranch": "main",
-    "autoUpdate": true,
-    "updateInterval": "7d"
-  },
-  "paths": {
-    "root": "~/.base-agents",
-    "cache": "~/.base-agents/.config/cache",
-    "temp": "/tmp/base-agents"
-  },
-  "git": {
-    "depth": 1,
-    "singleBranch": true
-  },
-  "sync": {
-    "enabled": true,
-    "conflictStrategy": "ask"
-  }
-}
+```bash
+cd base-agents/
+
+# 스킬 템플릿 생성
+node dist/cli.js template skill typescript-tips --description "TypeScript 팁"
+
+# 내용 편집
+vim skills/typescript-tips/SKILL.md
 ```
 
-## Environment Variables
+### 2. 여러 프로젝트에서 사용
 
-- `BASE_AGENTS_ROOT` - Override default root directory
-- `BASE_AGENTS_LOG_LEVEL` - Set logging verbosity
-- `DEBUG` - Enable debug output
+```bash
+# 프로젝트 A
+cd ~/projects/project-a/
+~/Desktop/base-agents/setup-agents.sh
 
-## License
+# 프로젝트 B
+cd ~/projects/project-b/
+~/Desktop/base-agents/setup-agents.sh
+```
+
+### 3. SSOT 업데이트
+
+```bash
+cd base-agents/
+
+# 스킬 내용 수정
+vim skills/typescript-tips/SKILL.md
+
+# Git에 커밋
+git add skills/typescript-tips/SKILL.md
+git commit -m "Update TypeScript tips"
+
+# 프로젝트들에서 다시 복사
+cd ~/projects/project-a/
+~/Desktop/base-agents/setup-agents.sh
+```
+
+## 기존 방식과의 차이
+
+### 이전 방식
+```
+~/.base-agents/ (개인용)
+각 프로젝트/ (별도 관리)
+```
+
+### 새 방식 (SSOT)
+```
+base-agents/ 레포지토리 (SSOT)
+  ↓ 복사
+각 프로젝트/ (.claude/, .cursor/ 등 생성)
+```
+
+## 라이선스
 
 MIT

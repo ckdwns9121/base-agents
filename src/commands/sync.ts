@@ -7,9 +7,24 @@ import { logger } from '../utils/logger.js';
 export async function syncCommand(
   source: string,
   targets: string[] = [],
-  options: { conflict?: 'ask' | 'overwrite' | 'skip' } = {}
+  options?: { conflict?: 'ask' | 'overwrite' | 'skip' }
 ): Promise<void> {
   try {
+    // Debug logging
+    console.log('DEBUG source:', source);
+    console.log('DEBUG targets:', targets);
+    console.log('DEBUG targets type:', typeof targets);
+    console.log('DEBUG isArray:', Array.isArray(targets));
+
+    // Handle case where targets might be undefined or not an array
+    if (!Array.isArray(targets)) {
+      // If targets is not an array, it might be the options object
+      if (typeof targets === 'object' && targets !== null) {
+        options = targets as any;
+        targets = [];
+      }
+    }
+
     const registry = new ToolRegistryManager();
     await registry.loadRegistry();
 
@@ -42,7 +57,7 @@ export async function syncCommand(
     const results = await sync.sync({
       source: resolvedSource as ToolName,
       targets: resolvedTargets,
-      conflictStrategy: options.conflict || 'ask'
+      conflictStrategy: options?.conflict || 'ask'
     });
 
     spinner.succeed('Sync completed');
